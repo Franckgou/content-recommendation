@@ -1,0 +1,36 @@
+# Movie Recommendation App
+
+This is a movie recommendation application built with React for the frontend and Node.js with Express for the backend. The app allows users to sign up, log in, like movies, save movies to watch later, and get personalized movie recommendations.
+
+## Features
+
+- User authentication (signup and login)
+- View popular movies
+- Like and dislike movies
+- Save movies to watch later
+- Get personalized movie recommendations
+
+## Technologies Used
+
+- Frontend: React
+- Backend: Node.js, Express
+- Database: PostgreSQL
+- ORM: SQLAlchemy
+- Machine Learning: Scikit-learn (for recommendations)
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js
+- PostgreSQL
+- Python 3.x
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/your-username/your-repository-name.git
+   cd your-repository-name
+   ```

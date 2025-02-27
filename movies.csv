@@ -1,0 +1,4 @@
+id,title,description,genre,rating,release_year,poster_url
+1,Inception,A thief who steals corporate secrets through the use of dream-sharing technology.,Sci-Fi,8.8,2010,https://example.com/poster1.jpg
+2,The Dark Knight,When the menace known as the Joker emerges Batman must confront him.,Action,9.0,2008,https://example.com/poster2.jpg
+3,Interstellar,"A team of explorers travel through a wormhole",Sci-Fi,8.6,2014,https://example.com/poster3.jpg
