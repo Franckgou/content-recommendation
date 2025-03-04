@@ -1,257 +1,327 @@
-require("dotenv").config(); // Load environment variables
+import "./Home.css";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Link } from "react-router-dom";
 
-const express = require("express");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const pool = require("./db");
-const cors = require("cors");
-const { PythonShell } = require("python-shell");
-const app = express();
-const PORT = process.env.PORT || 5000;
+const Home = () => {
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [allMovies, setAllMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [activeTab, setActiveTab] = useState("popular");
 
-// Middleware to parse JSON
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
-app.use(express.json());
-
-// Signup API
-app.post("/signup", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-
-    // Check if email or username already exists
-    const userExists = await pool.query(
-      "SELECT * FROM users WHERE email = $1 OR username = $2",
-      [email, username]
-    );
-    if (userExists.rows.length > 0) {
-      return res
-        .status(400)
-        .json({ message: "Email or username already exists" });
-    }
-
-    // Hash the password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Save user to the database
-    const newUser = await pool.query(
-      "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *",
-      [username, email, hashedPassword]
-    );
-
-    // Generate JWT
-    const token = jwt.sign({ id: newUser.rows[0].id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    res.json({ token, userId: newUser.rows[0].id });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
-  }
-});
-
-// Login API
-app.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Check if user exists
-    const user = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
-    if (user.rows.length === 0) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
-    // Check if password is correct
-    const validPassword = await bcrypt.compare(password, user.rows[0].password);
-    if (!validPassword) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
-    // Generate JWT
-    const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    res.json({ token, userId: user.rows[0].id });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
-  }
-});
-
-// Get popular movies (most liked)
-app.get("/movies/popular", async (req, res) => {
-  try {
-    const popularMovies = await pool.query(`
-      SELECT movies.*, COUNT(user_interactions.movie_id) as likes 
-      FROM movies 
-      LEFT JOIN user_interactions ON movies.id = user_interactions.movie_id 
-      AND user_interactions.liked = true 
-      GROUP BY movies.id 
-      ORDER BY likes DESC 
-      LIMIT 10
-    `);
-    res.json(popularMovies.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
-  }
-});
-
-app.get("/movies", async (req, res) => {
-  try {
-    const movies = await pool.query("SELECT * FROM movies");
-    res.json(movies.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
-  }
-});
-
-// Like Endpoint
-app.post("/movies/:id/like", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userId } = req.body;
-
-    await pool.query(
-      `INSERT INTO user_interactions 
-       (user_id, movie_id, liked, watch_later) 
-       VALUES ($1, $2, true, false)
-       ON CONFLICT (user_id, movie_id) 
-       DO UPDATE SET liked = EXCLUDED.liked, watch_later = EXCLUDED.watch_later`,
-      [userId, id]
-    );
-
-    res.json({ message: "Like updated successfully" });
-  } catch (err) {
-    console.error("Like error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-// Dislike Endpoint
-app.post("/movies/:id/dislike", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userId } = req.body;
-
-    await pool.query(
-      `INSERT INTO user_interactions 
-       (user_id, movie_id, liked, watch_later) 
-       VALUES ($1, $2, false, false)
-       ON CONFLICT (user_id, movie_id) 
-       DO UPDATE SET liked = EXCLUDED.liked, watch_later = EXCLUDED.watch_later`,
-      [userId, id]
-    );
-
-    res.json({ message: "Dislike updated successfully" });
-  } catch (err) {
-    console.error("Dislike error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-// Watch Later Endpoint
-app.post("/movies/:id/watch-later", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userId } = req.body;
-
-    await pool.query(
-      `INSERT INTO user_interactions 
-       (user_id, movie_id, watch_later) 
-       VALUES ($1, $2, true)
-       ON CONFLICT (user_id, movie_id) 
-       DO UPDATE SET watch_later = EXCLUDED.watch_later`,
-      [userId, id]
-    );
-
-    res.json({ message: "Watch later updated successfully" });
-  } catch (err) {
-    console.error("Watch later error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-// Fetch user's watch-later movies
-app.get("/user/:id/watch-later", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const watchLaterMovies = await pool.query(
-      "SELECT movies.* FROM movies JOIN user_interactions ON movies.id = user_interactions.movie_id WHERE user_interactions.user_id = $1 AND user_interactions.watch_later = true",
-      [id]
-    );
-    res.json(watchLaterMovies.rows);
-  } catch (err) {
-    console.error("Error fetching watch-later movies:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-// Fetch user's liked movies
-app.get("/user/:userId/liked-movies", async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    // Check if user exists
-    const userExists = await pool.query("SELECT * FROM users WHERE id = $1", [
-      userId,
-    ]);
-    if (userExists.rows.length === 0) {
-      return res.status(400).json({ message: "User does not exist" });
-    }
-
-    const likedMovies = await pool.query(
-      "SELECT movies.* FROM movies JOIN user_interactions ON movies.id = user_interactions.movie_id WHERE user_interactions.user_id = $1 AND user_interactions.liked = true",
-      [userId]
-    );
-
-    res.json(likedMovies.rows);
-  } catch (err) {
-    console.error("Error fetching liked movies:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-// Fetch recommendations
-app.get("/recommendations", async (req, res) => {
-  try {
-    const { userId } = req.query;
-
-    // Check if user exists
-    const userExists = await pool.query("SELECT * FROM users WHERE id = $1", [
-      userId,
-    ]);
-    if (userExists.rows.length === 0) {
-      return res.status(400).json({ message: "User does not exist" });
-    }
-
-    // Fetch recommendations using Python script
-    const options = {
-      args: [userId],
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
     };
 
-    PythonShell.run("get_recommendations.py", options, (err, results) => {
-      if (err) {
-        console.error("Error running Python script:", err);
-        return res
-          .status(500)
-          .json({ message: "Server error", error: err.message });
+    const fetchData = async () => {
+      try {
+        // Fetch all movies first
+        const allMoviesResponse = await axios.get(
+          "http://localhost:5000/movies"
+        );
+        setAllMovies(allMoviesResponse.data);
+
+        // Fetch popular movies
+        const popularResponse = await axios.get(
+          "http://localhost:5000/movies/popular"
+        );
+        setPopularMovies(popularResponse.data);
+
+        // Fetch recommendations if logged in
+        if (isLoggedIn) {
+          const userId = localStorage.getItem("userId");
+          try {
+            const recommendationsResponse = await axios.get(
+              `http://localhost:5000/recommendations?userId=${userId}`
+            );
+            setRecommendations(recommendationsResponse.data);
+            // Set active tab to recommendations for logged-in users with recommendations
+            if (recommendationsResponse.data.length > 0) {
+              setActiveTab("recommendations");
+            }
+          } catch (recError) {
+            console.error("Error fetching recommendations:", recError);
+            // If recommendations fail, keep showing popular movies
+          }
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+    fetchData();
+  }, [isLoggedIn]);
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading movies...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboard">
+      <nav className="dashboard-nav">
+        <h1>TasteDive</h1>
+        <div className="tab-navigation">
+          <button
+            className={`tab-button ${activeTab === "popular" ? "active" : ""}`}
+            onClick={() => setActiveTab("popular")}
+          >
+            Most Popular
+          </button>
+
+          {isLoggedIn && recommendations.length > 0 && (
+            <button
+              className={`tab-button ${
+                activeTab === "recommendations" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("recommendations")}
+            >
+              For You
+            </button>
+          )}
+
+          <button
+            className={`tab-button ${activeTab === "all" ? "active" : ""}`}
+            onClick={() => setActiveTab("all")}
+          >
+            All Movies
+          </button>
+        </div>
+        <div className="auth-buttons">
+          {!isLoggedIn ? (
+            <>
+              <Link to="/login" className="auth-button login">
+                Login
+              </Link>
+              <Link to="/signup" className="auth-button signup">
+                Sign Up
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/profile" className="auth-button profile">
+                Profile
+              </Link>
+              <button
+                className="auth-button logout"
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("userId");
+                  setIsLoggedIn(false);
+                  setActiveTab("popular");
+                }}
+              >
+                Logout
+              </button>
+            </>
+          )}
+        </div>
+      </nav>
+
+      {activeTab === "popular" && (
+        <div className="movies-section popular-section">
+          <h2>Most Popular Films</h2>
+          <div className="movie-grid">
+            {popularMovies.length > 0 ? (
+              popularMovies.map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  isLoggedIn={isLoggedIn}
+                  isHighlighted={true}
+                />
+              ))
+            ) : (
+              <p className="no-movies">No popular movies found</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "recommendations" && isLoggedIn && (
+        <div className="movies-section recommendations-section">
+          <h2>Recommended For You</h2>
+          <div className="movie-grid">
+            {recommendations.length > 0 ? (
+              recommendations.map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  isLoggedIn={isLoggedIn}
+                  isHighlighted={true}
+                />
+              ))
+            ) : (
+              <p className="no-movies">
+                No recommendations yet. Start liking movies!
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "all" && (
+        <div className="movies-section all-movies-section">
+          <h2>All Movies</h2>
+          <div className="movie-grid">
+            {allMovies.length > 0 ? (
+              allMovies.map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  isLoggedIn={isLoggedIn}
+                  isHighlighted={false}
+                />
+              ))
+            ) : (
+              <p className="no-movies">No movies in the catalog</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MovieCard = ({ movie, isLoggedIn, isHighlighted }) => {
+  const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
+  const [isWatchLater, setIsWatchLater] = useState(false);
+  const [message, setMessage] = useState("");
+  const [interactions, setInteractions] = useState(null);
+
+  // Fetch initial state from API when component mounts
+  useEffect(() => {
+    const fetchInteraction = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        const response = await axios.get(
+          `http://localhost:5000/movies/${movie.id}/interaction`,
+          { params: { userId } }
+        );
+        const data = response.data;
+        setIsLiked(data.liked);
+        setIsDisliked(data.disliked);
+        setIsWatchLater(data.watch_later);
+        setInteractions(data);
+      } catch (error) {
+        console.error("Error fetching interaction:", error);
+      }
+    };
+
+    if (isLoggedIn) fetchInteraction();
+  }, [isLoggedIn, movie.id]);
+
+  const handleInteraction = async (type) => {
+    if (!isLoggedIn) {
+      setMessage("Please log in to interact with movies");
+      setTimeout(() => setMessage(""), 2000);
+      return;
+    }
+
+    let previousState = { isLiked, isDisliked, isWatchLater };
+
+    try {
+      const userId = localStorage.getItem("userId");
+
+      // Optimistic UI update
+      switch (type) {
+        case "like":
+          setIsLiked(true);
+          setIsDisliked(false);
+          break;
+        case "dislike":
+          setIsDisliked(true);
+          setIsLiked(false);
+          break;
+        case "watch-later":
+          setIsWatchLater(!isWatchLater);
+          break;
+        default:
+          // Handle unexpected types
+          break;
       }
 
-      const recommendations = JSON.parse(results[0]);
-      res.json(recommendations);
-    });
-  } catch (err) {
-    console.error("Error fetching recommendations:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
+      const response = await axios.post(
+        `http://localhost:5000/movies/${movie.id}/${type}`,
+        { userId }
+      );
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+      setMessage(response.data.message);
+      setTimeout(() => setMessage(""), 2000);
+    } catch (error) {
+      console.error("Interaction error:", error);
+      // Rollback on error using the captured previous state
+      setIsLiked(previousState.isLiked);
+      setIsDisliked(previousState.isDisliked);
+      setIsWatchLater(previousState.isWatchLater);
+      setMessage(error.response?.data?.message || "Action failed");
+      setTimeout(() => setMessage(""), 2000);
+    }
+  };
+
+  const cardClasses = `movie-card ${isHighlighted ? "highlighted" : ""}`;
+
+  return (
+    <div className={cardClasses}>
+      <div className="poster-container">
+        <img
+          src={movie.poster_url}
+          alt={movie.title}
+          className="movie-poster"
+        />
+        {isHighlighted && <div className="popular-badge">🔥 Popular</div>}
+      </div>
+      <div className="movie-info">
+        <h3>
+          {movie.title} {movie.release_year && `(${movie.release_year})`}
+        </h3>
+        <div className="movie-meta">
+          <p className="genre">{movie.genre}</p>
+          <p className="rating">★ {movie.rating || "N/A"}</p>
+        </div>
+        <p className="description">{movie.description}</p>
+        {message && <div className="action-message">{message}</div>}
+        <div className="action-buttons">
+          <button
+            className={`action-btn like-btn ${isLiked ? "active" : ""}`}
+            onClick={() => handleInteraction("like")}
+          >
+            <span className="btn-icon">👍</span> {isLiked ? "Liked" : "Like"}
+          </button>
+          <button
+            className={`action-btn dislike-btn ${isDisliked ? "active" : ""}`}
+            onClick={() => handleInteraction("dislike")}
+          >
+            <span className="btn-icon">👎</span>{" "}
+            {isDisliked ? "Disliked" : "Dislike"}
+          </button>
+          <button
+            className={`action-btn watch-later-btn ${
+              isWatchLater ? "active" : ""
+            }`}
+            onClick={() => handleInteraction("watch-later")}
+          >
+            <span className="btn-icon">{isWatchLater ? "✓" : "+"}</span>{" "}
+            {isWatchLater ? "Saved" : "Watch Later"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Home;
+export { MovieCard };
