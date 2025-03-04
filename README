@@ -105,13 +105,21 @@ npm install
 
 ## Edit .env with your configuration
 
+<<<<<<< HEAD
 2.Set up database
+=======
+2. Set up database
+>>>>>>> 136a92af4507ae2ed745bd48ed5a0692a1f67526
 
 ## Run database migrations
 
 alembic upgrade head
 
+<<<<<<< HEAD
 3.Start the application
+=======
+3. Start the application
+>>>>>>> 136a92af4507ae2ed745bd48ed5a0692a1f67526
 
 ## From the root directory
 
