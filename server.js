@@ -217,6 +217,56 @@ app.get("/user/:userId/liked-movies", async (req, res) => {
   }
 });
 
+// Get movie interaction status for a specific user
+app.get("/movies/:id/interaction", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.query;
+
+    // Validate inputs
+    if (!id || !userId) {
+      return res.status(400).json({
+        message: "Movie ID and user ID are required",
+        liked: false,
+        disliked: false,
+        watch_later: false,
+      });
+    }
+
+    // Get the interaction from database
+    const interaction = await pool.query(
+      "SELECT liked, watch_later FROM user_interactions WHERE user_id = $1 AND movie_id = $2",
+      [userId, id]
+    );
+
+    // If interaction exists
+    if (interaction.rows.length > 0) {
+      const data = interaction.rows[0];
+      return res.json({
+        liked: data.liked,
+        disliked: data.liked === false, // If liked is explicitly false, it's disliked
+        watch_later: data.watch_later,
+      });
+    }
+
+    // No interaction found
+    return res.json({
+      liked: false,
+      disliked: false,
+      watch_later: false,
+    });
+  } catch (err) {
+    console.error("Error fetching interaction:", err);
+    res.status(500).json({
+      message: "Server error",
+      error: err.message,
+      liked: false,
+      disliked: false,
+      watch_later: false,
+    });
+  }
+});
+
 // Fetch recommendations
 app.get("/recommendations", async (req, res) => {
   try {
