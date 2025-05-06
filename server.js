@@ -266,18 +266,58 @@ app.get("/movies/:id/interaction", async (req, res) => {
     });
   }
 });
+// Add this endpoint to your server.js file (after the other endpoints)
+
+// Get user details by ID
+app.get("/user/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID
+    if (!id || id === "null" || id === "undefined") {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    // Get user information (excluding password)
+    const user = await pool.query(
+      "SELECT id, username, email FROM users WHERE id = $1",
+      [id]
+    );
+
+    if (user.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user.rows[0]);
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
 
 // Fetch recommendations
 app.get("/recommendations", async (req, res) => {
   try {
     const { userId } = req.query;
 
+    // Validate userId is present and is a valid integer
+    if (!userId || userId === "null" || userId === "undefined") {
+      return res.status(400).json({
+        message: "Valid user ID is required",
+        recommendations: [],
+      });
+    }
+
     // Check if user exists
     const userExists = await pool.query("SELECT * FROM users WHERE id = $1", [
       userId,
     ]);
+
     if (userExists.rows.length === 0) {
-      return res.status(400).json({ message: "User does not exist" });
+      return res.status(400).json({
+        message: "User does not exist",
+        recommendations: [],
+      });
     }
 
     // Fetch recommendations using Python script
@@ -288,21 +328,38 @@ app.get("/recommendations", async (req, res) => {
     PythonShell.run("get_recommendations.py", options, (err, results) => {
       if (err) {
         console.error("Error running Python script:", err);
-        return res
-          .status(500)
-          .json({ message: "Server error", error: err.message });
+        return res.status(500).json({
+          message: "Server error",
+          error: err.message,
+          recommendations: [],
+        });
       }
 
-      const recommendations = JSON.parse(results[0]);
-      res.json(recommendations);
+      try {
+        // Parse the results safely
+        const recommendations =
+          results && results.length > 0 ? JSON.parse(results[0]) : [];
+
+        res.json(recommendations);
+      } catch (parseError) {
+        console.error("Error parsing recommendations:", parseError);
+        res.status(500).json({
+          message: "Error parsing recommendations",
+          error: parseError.message,
+          recommendations: [],
+        });
+      }
     });
   } catch (err) {
     console.error("Error fetching recommendations:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({
+      message: "Server error",
+      error: err.message,
+      recommendations: [],
+    });
   }
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-

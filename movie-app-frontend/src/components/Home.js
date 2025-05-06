@@ -1,7 +1,7 @@
 import "./Home.css";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Home = () => {
   const [popularMovies, setPopularMovies] = useState([]);
@@ -10,15 +10,28 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState("popular");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem("token");
-      setIsLoggedIn(!!token);
+      const isAuthenticated = !!token;
+      setIsLoggedIn(isAuthenticated);
+
+      // Auto-redirect to profile page when logged in
+      if (isAuthenticated) {
+        navigate("/profile");
+      }
     };
 
+    checkAuth();
+  }, [navigate]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
+
         // Fetch all movies first
         const allMoviesResponse = await axios.get(
           "http://localhost:5000/movies"
@@ -34,18 +47,22 @@ const Home = () => {
         // Fetch recommendations if logged in
         if (isLoggedIn) {
           const userId = localStorage.getItem("userId");
-          try {
-            const recommendationsResponse = await axios.get(
-              `http://localhost:5000/recommendations?userId=${userId}`
-            );
-            setRecommendations(recommendationsResponse.data);
-            // Set active tab to recommendations for logged-in users with recommendations
-            if (recommendationsResponse.data.length > 0) {
-              setActiveTab("recommendations");
+
+          // Only fetch recommendations if userId is valid
+          if (userId && userId !== "null" && userId !== "undefined") {
+            try {
+              const recommendationsResponse = await axios.get(
+                `http://localhost:5000/recommendations?userId=${userId}`
+              );
+              setRecommendations(recommendationsResponse.data);
+              // Set active tab to recommendations for logged-in users with recommendations
+              if (recommendationsResponse.data.length > 0) {
+                setActiveTab("recommendations");
+              }
+            } catch (recError) {
+              console.error("Error fetching recommendations:", recError);
+              // If recommendations fail, keep showing popular movies
             }
-          } catch (recError) {
-            console.error("Error fetching recommendations:", recError);
-            // If recommendations fail, keep showing popular movies
           }
         }
 
@@ -56,7 +73,7 @@ const Home = () => {
       }
     };
 
-    checkAuth();
+    // Only fetch data when component mounts
     fetchData();
   }, [isLoggedIn]);
 
@@ -72,13 +89,15 @@ const Home = () => {
   return (
     <div className="dashboard">
       <nav className="dashboard-nav">
-        <h1>TasteDive</h1>
+        <div className="logo-container">
+          <h1>TasteDive</h1>
+        </div>
         <div className="tab-navigation">
           <button
             className={`tab-button ${activeTab === "popular" ? "active" : ""}`}
             onClick={() => setActiveTab("popular")}
           >
-            Most Popular
+            <i className="fas fa-fire"></i> Most Popular
           </button>
 
           {isLoggedIn && recommendations.length > 0 && (
@@ -88,7 +107,7 @@ const Home = () => {
               }`}
               onClick={() => setActiveTab("recommendations")}
             >
-              For You
+              <i className="fas fa-thumbs-up"></i> For You
             </button>
           )}
 
@@ -96,23 +115,23 @@ const Home = () => {
             className={`tab-button ${activeTab === "all" ? "active" : ""}`}
             onClick={() => setActiveTab("all")}
           >
-            All Movies
+            <i className="fas fa-film"></i> All Movies
           </button>
         </div>
         <div className="auth-buttons">
           {!isLoggedIn ? (
             <>
               <Link to="/login" className="auth-button login">
-                Login
+                <i className="fas fa-sign-in-alt"></i> Login
               </Link>
               <Link to="/signup" className="auth-button signup">
-                Sign Up
+                <i className="fas fa-user-plus"></i> Sign Up
               </Link>
             </>
           ) : (
             <>
               <Link to="/profile" className="auth-button profile">
-                Profile
+                <i className="fas fa-user"></i> Profile
               </Link>
               <button
                 className="auth-button logout"
@@ -123,7 +142,7 @@ const Home = () => {
                   setActiveTab("popular");
                 }}
               >
-                Logout
+                <i className="fas fa-sign-out-alt"></i> Logout
               </button>
             </>
           )}
@@ -132,7 +151,14 @@ const Home = () => {
 
       {activeTab === "popular" && (
         <div className="movies-section popular-section">
-          <h2>Most Popular Films</h2>
+          <div className="section-header">
+            <h2>Most Popular Films</h2>
+            <select className="sort-dropdown">
+              <option value="popularity">Sort by Popularity</option>
+              <option value="rating">Sort by Rating</option>
+              <option value="year">Sort by Year</option>
+            </select>
+          </div>
           <div className="movie-grid">
             {popularMovies.length > 0 ? (
               popularMovies.map((movie) => (
@@ -152,7 +178,9 @@ const Home = () => {
 
       {activeTab === "recommendations" && isLoggedIn && (
         <div className="movies-section recommendations-section">
-          <h2>Recommended For You</h2>
+          <div className="section-header">
+            <h2>Recommended For You</h2>
+          </div>
           <div className="movie-grid">
             {recommendations.length > 0 ? (
               recommendations.map((movie) => (
@@ -174,7 +202,14 @@ const Home = () => {
 
       {activeTab === "all" && (
         <div className="movies-section all-movies-section">
-          <h2>All Movies</h2>
+          <div className="section-header">
+            <h2>All Movies</h2>
+            <select className="sort-dropdown">
+              <option value="title">Sort by Title</option>
+              <option value="rating">Sort by Rating</option>
+              <option value="year">Sort by Year</option>
+            </select>
+          </div>
           <div className="movie-grid">
             {allMovies.length > 0 ? (
               allMovies.map((movie) => (
@@ -207,6 +242,10 @@ const MovieCard = ({ movie, isLoggedIn, isHighlighted }) => {
     const fetchInteraction = async () => {
       try {
         const userId = localStorage.getItem("userId");
+        if (!userId || userId === "null" || userId === "undefined") {
+          return;
+        }
+
         const response = await axios.get(
           `http://localhost:5000/movies/${movie.id}/interaction`,
           { params: { userId } }
@@ -231,11 +270,16 @@ const MovieCard = ({ movie, isLoggedIn, isHighlighted }) => {
       return;
     }
 
+    const userId = localStorage.getItem("userId");
+    if (!userId || userId === "null" || userId === "undefined") {
+      setMessage("Please log in again");
+      setTimeout(() => setMessage(""), 2000);
+      return;
+    }
+
     let previousState = { isLiked, isDisliked, isWatchLater };
 
     try {
-      const userId = localStorage.getItem("userId");
-
       // Optimistic UI update
       switch (type) {
         case "like":
@@ -250,7 +294,6 @@ const MovieCard = ({ movie, isLoggedIn, isHighlighted }) => {
           setIsWatchLater(!isWatchLater);
           break;
         default:
-          // Handle unexpected types
           break;
       }
 
@@ -274,13 +317,24 @@ const MovieCard = ({ movie, isLoggedIn, isHighlighted }) => {
 
   const cardClasses = `movie-card ${isHighlighted ? "highlighted" : ""}`;
 
+  // Use a default image if poster_url is not available
+  const posterUrl =
+    movie.poster_url ||
+    `https://via.placeholder.com/300x450/cccccc/000000?text=${encodeURIComponent(
+      movie.title || "Movie"
+    )}`;
+
   return (
     <div className={cardClasses}>
       <div className="poster-container">
         <img
-          src={movie.poster_url}
+          src={posterUrl}
           alt={movie.title}
           className="movie-poster"
+          onError={(e) => {
+            // Fallback to a simpler URL if the original fails
+            e.target.src = `https://via.placeholder.com/300x450/cccccc/000000?text=Movie`;
+          }}
         />
         {isHighlighted && <div className="popular-badge">🔥 Popular</div>}
       </div>

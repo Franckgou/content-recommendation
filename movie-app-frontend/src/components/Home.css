@@ -1,31 +1,66 @@
+/* Enhanced Home.css */
+:root {
+  --primary-color: #3a86ff;
+  --secondary-color: #ff006e;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --text-color: #495057;
+  --border-radius: 10px;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--light-color);
+  margin: 0;
+  padding: 0;
+}
+
 .dashboard {
-  padding: 20px;
   max-width: 1400px;
   margin: 0 auto;
-  background-color: #f8f9fa;
+  background-color: var(--light-color);
   min-height: 100vh;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .dashboard-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
   padding: 15px 25px;
   background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
   position: sticky;
   top: 0;
   z-index: 100;
+  margin-bottom: 30px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 40px;
+  margin-right: 10px;
 }
 
 .dashboard-nav h1 {
-  color: #3a86ff;
+  color: var(--primary-color);
   margin: 0;
   font-size: 2rem;
   font-weight: 700;
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .auth-buttons {
@@ -36,27 +71,35 @@
 .auth-button {
   padding: 10px 20px;
   text-decoration: none;
-  border-radius: 5px;
-  transition: all 0.3s ease;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
   font-weight: 600;
   cursor: pointer;
   border: none;
   font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.auth-button i {
+  font-size: 1.2rem;
 }
 
 .login {
   background-color: transparent;
-  color: #3a86ff;
-  border: 2px solid #3a86ff;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
 }
 
 .login:hover {
   background-color: rgba(58, 134, 255, 0.1);
+  transform: translateY(-2px);
 }
 
 .signup,
 .profile {
-  background-color: #3a86ff;
+  background-color: var(--primary-color);
   color: white;
 }
 
@@ -69,27 +112,31 @@
 
 .logout {
   background-color: #f1f3f5;
-  color: #495057;
+  color: var(--text-color);
 }
 
 .logout:hover {
   background-color: #e9ecef;
+  transform: translateY(-2px);
 }
 
 .tab-navigation {
   display: flex;
   gap: 10px;
+  border-radius: var(--border-radius);
+  background-color: #f1f3f5;
+  padding: 5px;
 }
 
 .tab-button {
-  padding: 8px 16px;
-  background-color: #f1f3f5;
+  padding: 10px 20px;
+  background-color: transparent;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   cursor: pointer;
   font-weight: 500;
-  color: #6c757d;
-  transition: all 0.2s ease;
+  color: var(--text-color);
+  transition: var(--transition);
 }
 
 .tab-button:hover {
@@ -97,83 +144,118 @@
 }
 
 .tab-button.active {
-  background-color: #3a86ff;
-  color: white;
+  background-color: #fff;
+  color: var(--primary-color);
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .movies-section {
+  padding: 20px;
   margin-bottom: 50px;
 }
 
-.movies-section h2 {
-  font-size: 1.6rem;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
-  color: #343a40;
-  font-weight: 600;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #3a86ff;
 }
 
-.popular-section h2 {
-  color: #ff006e;
-  border-color: #ff006e;
+.movies-section h2 {
+  font-size: 1.8rem;
+  color: var(--dark-color);
+  font-weight: 700;
+  margin: 0;
+  position: relative;
+  display: inline-block;
 }
 
-.recommendations-section h2 {
-  color: #3a86ff;
-  border-color: #3a86ff;
+.movies-section h2::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  border-radius: 10px;
+  background-color: var(--primary-color);
+}
+
+.popular-section h2::after {
+  background-color: var(--secondary-color);
+}
+
+.sort-dropdown {
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  border: 1px solid #dee2e6;
+  background-color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  outline: none;
 }
 
 .movie-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 30px;
-  padding: 20px 0;
+  gap: 25px;
 }
 
 .movie-card {
   background: white;
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   overflow: hidden;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .movie-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
 }
 
 .movie-card.highlighted {
-  border: 2px solid #ff006e;
+  border: 2px solid var(--secondary-color);
   box-shadow: 0 5px 15px rgba(255, 0, 110, 0.15);
 }
 
 .poster-container {
   position: relative;
   height: 380px;
+  overflow: hidden;
 }
 
 .movie-poster {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.movie-card:hover .movie-poster {
+  transform: scale(1.05);
 }
 
 .popular-badge {
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: #ff006e;
+  background-color: var(--secondary-color);
   color: white;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .movie-info {
@@ -181,13 +263,15 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  position: relative;
 }
 
 .movie-info h3 {
   margin: 0 0 10px;
   font-size: 1.2rem;
-  color: #212529;
+  color: var(--dark-color);
   line-height: 1.4;
+  font-weight: 700;
 }
 
 .movie-meta {
@@ -197,20 +281,33 @@
 }
 
 .genre {
-  color: #6c757d;
+  color: var(--text-color);
   font-size: 0.9rem;
   margin: 0;
+  background-color: #f1f3f5;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-block;
 }
 
 .rating {
   color: #ffd700;
   font-weight: bold;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.year {
+  color: var(--text-color);
+  font-size: 0.9rem;
+  margin-top: 5px;
 }
 
 .description {
   font-size: 0.95rem;
-  color: #495057;
+  color: var(--text-color);
   line-height: 1.5;
   margin-bottom: 20px;
   overflow: hidden;
@@ -232,9 +329,9 @@
   flex: 1;
   padding: 10px;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition);
   font-size: 0.85rem;
   font-weight: 500;
   display: flex;
@@ -248,12 +345,12 @@
 }
 
 .action-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 .like-btn {
   background-color: #e9ecef;
-  color: #212529;
+  color: var(--dark-color);
 }
 
 .like-btn:hover,
@@ -264,7 +361,7 @@
 
 .dislike-btn {
   background-color: #e9ecef;
-  color: #212529;
+  color: var(--dark-color);
 }
 
 .dislike-btn:hover,
@@ -275,12 +372,12 @@
 
 .watch-later-btn {
   background-color: #e9ecef;
-  color: #212529;
+  color: var(--dark-color);
 }
 
 .watch-later-btn:hover,
 .watch-later-btn.active {
-  background-color: #3a86ff;
+  background-color: var(--primary-color);
   color: white;
 }
 
@@ -289,7 +386,7 @@
   font-size: 0.8rem;
   text-align: center;
   margin: 10px 0;
-  padding: 5px;
+  padding: 8px;
   border-radius: 5px;
   background-color: rgba(40, 167, 69, 0.1);
   animation: fadeOut 2.5s forwards;
@@ -310,9 +407,12 @@
 .no-movies {
   grid-column: 1 / -1;
   text-align: center;
-  color: #6c757d;
+  color: var(--text-color);
   font-size: 1.1rem;
   padding: 50px 0;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
 }
 
 .loading-container {
@@ -321,7 +421,7 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  color: #3a86ff;
+  color: var(--primary-color);
 }
 
 .loading-spinner {
@@ -329,9 +429,84 @@
   height: 50px;
   border: 5px solid rgba(58, 134, 255, 0.2);
   border-radius: 50%;
-  border-top-color: #3a86ff;
+  border-top-color: var(--primary-color);
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 20px;
+}
+/* Add these styles to your Home.css file for profile-specific styling */
+
+.welcome-message {
+  text-align: center;
+  margin: 0 20px;
+}
+
+.welcome-message h2 {
+  font-size: 1.5rem;
+  color: var(--text-color);
+  margin: 0;
+  font-weight: 600;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  min-height: 400px;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #dee2e6;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  font-size: 1.8rem;
+  color: var(--dark-color);
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  color: var(--text-color);
+  margin-bottom: 30px;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 20px;
+}
+
+.error-container h2 {
+  font-size: 2.5rem;
+  color: var(--secondary-color);
+  margin-bottom: 15px;
+}
+
+.error-container p {
+  color: var(--text-color);
+  margin-bottom: 25px;
+  max-width: 600px;
+}
+
+/* Override some styles for the profile page */
+.profile-page .section-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-page .section-header h2 i {
+  color: var(--primary-color);
 }
 
 @keyframes spin {
@@ -341,11 +516,39 @@
 }
 
 /* Responsive design */
+@media (max-width: 992px) {
+  .dashboard-nav {
+    padding: 15px;
+  }
+
+  .tab-navigation {
+    flex: 1;
+    margin: 0 15px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  .tab-navigation::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard-nav {
     flex-direction: column;
     gap: 15px;
-    padding: 15px;
+    position: relative;
+  }
+
+  .tab-navigation {
+    width: 100%;
+    margin: 0;
+  }
+
+  .auth-buttons {
+    width: 100%;
+    justify-content: center;
   }
 
   .movie-grid {
@@ -354,7 +557,42 @@
   }
 
   .poster-container {
-    height: 300px;
+    height: 320px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .sort-dropdown {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 576px) {
+  .movie-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 15px;
+  }
+
+  .poster-container {
+    height: 240px;
+  }
+
+  .movie-info {
+    padding: 15px;
+  }
+
+  .movie-info h3 {
+    font-size: 1rem;
+  }
+
+  .description {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-size: 0.85rem;
   }
 
   .action-buttons {

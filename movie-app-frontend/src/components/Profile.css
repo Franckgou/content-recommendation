@@ -1,0 +1,265 @@
+/* Profile.css */
+:root {
+  --primary-color: #3a86ff;
+  --secondary-color: #ff006e;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --text-color: #495057;
+  --border-radius: 10px;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+.profile-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  background-color: var(--light-color);
+  min-height: 100vh;
+}
+
+.welcome-message {
+  text-align: center;
+}
+
+.welcome-message h2 {
+  font-size: 1.5rem;
+  color: var(--text-color);
+  margin: 0;
+  font-weight: 600;
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 40px 0;
+}
+
+.stat-card {
+  background-color: white;
+  border-radius: var(--border-radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 150px;
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--dark-color);
+}
+
+.stat-label {
+  margin-top: 5px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.profile-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  padding-bottom: 50px;
+}
+
+.profile-section {
+  background-color: white;
+  border-radius: var(--border-radius);
+  padding: 30px;
+  box-shadow: var(--card-shadow);
+}
+
+.section-header {
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-header h2 {
+  font-size: 1.6rem;
+  color: var(--dark-color);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-header h2 i {
+  color: var(--primary-color);
+}
+
+.section-header:has(+ .movie-grid:empty)::after {
+  content: "No movies yet";
+  color: var(--text-color);
+  font-style: italic;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #dee2e6;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  font-size: 1.8rem;
+  color: var(--dark-color);
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  color: var(--text-color);
+  margin-bottom: 20px;
+  max-width: 500px;
+}
+
+.start-exploring-btn {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 25px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.start-exploring-btn:hover {
+  background-color: #2876f9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(58, 134, 255, 0.2);
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 20px;
+}
+
+.error-container h2 {
+  font-size: 2.5rem;
+  color: var(--secondary-color);
+  margin-bottom: 15px;
+}
+
+.error-container p {
+  color: var(--text-color);
+  margin-bottom: 25px;
+  max-width: 600px;
+}
+
+.return-home {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.return-home:hover {
+  background-color: #2876f9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(58, 134, 255, 0.2);
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+  .profile-stats {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .stat-card {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-message {
+    display: none;
+  }
+
+  .profile-stats {
+    margin: 30px 0;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .profile-section {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .profile-stats {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .stat-card {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 15px;
+  }
+
+  .stat-icon {
+    margin-bottom: 0;
+    margin-right: 15px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    margin-right: 8px;
+  }
+
+  .stat-label {
+    margin-top: 0;
+    align-self: center;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+  }
+
+  .empty-state h3 {
+    font-size: 1.5rem;
+  }
+}

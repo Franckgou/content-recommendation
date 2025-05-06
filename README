@@ -51,6 +51,7 @@ content-recommendation/
 │   ├── models/
 │   │   └── recommendation_model.pkl
 │   ├── get_recommendations.py
+│   ├── import_movielens.py
 │   └── train_model.py
 ├── alembic/
 │   ├── versions/
